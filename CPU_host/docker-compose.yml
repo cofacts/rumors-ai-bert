@@ -1,0 +1,37 @@
+version: '3.4'
+services:
+  tasks:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    env_file: .env
+    environment:
+
+      ## Local Dev Settings ###
+      TASK_HOST: 'http://ai-api-stag.cofacts.org'
+      MODEL_ID: '5f03292b8cc16e0b1d1e5f16'
+      SENTRY_DSN: ''
+      GPU_INSTANCE_NAME: 'gpu-instance-1'
+      GPU_INSTANCE_ZONE: 'us-east1-d'
+      USER: '$USER'
+      #SSH_AUTH_SOCK: ${SSH_AUTH_SOCK}
+      ## End Local Dev Settings ###
+    volumes:
+      # map tasks folder to the container
+      #- ./tasks:/app/tasks
+        #- /${SSH_AUTH_SOCK}:/${SSH_AUTH_SOCK}
+      - "./.ssh:/root/.ssh:ro"
+      - "./run-scripts:/root/run-scripts"
+        #- ./.ssh/google_compute_engine:/root/.ssh/google_compute_engine:ro
+        #- ./.ssh/google_compute_engine.pub:/root/.ssh/google_compute_engine.pub:ro
+        #- ./.ssh/google_compute_known_hosts:/root/.ssh/google_compute_known_hosts:ro
+        #    links:
+        #- "gcloud"
+    # ports:
+    #   - '8080:8080'
+    #
+    # gcloud:
+    #image: gcr.io/google.com/cloudsdktool/cloud-sdk:latest
+    #environment:
+      #
+
