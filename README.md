@@ -9,6 +9,6 @@ https://hub.docker.com/r/gary9630/rumors-ai-bert/tags
 
 1. Go to CPU_host directory
 
-2. Use command 'docker-compose up --build'
+2. Use command `docker-compose up --build`
 
 3. There you go!
