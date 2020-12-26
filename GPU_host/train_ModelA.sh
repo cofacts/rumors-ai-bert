@@ -1,6 +1,6 @@
 #!bin/bash
 
-python ./rumors-ai/ai_model/models/model_A/run_multi_label_classification.py \
+python ./model_bert/run_multi_label_classification.py \
 	--task_name cofacts \
 	--model_name_or_path bert-base-chinese \
 	--do_train \
