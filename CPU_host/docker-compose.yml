@@ -11,8 +11,8 @@ services:
       TASK_HOST: 'https://ai-api-stag.cofacts.org'
       MODEL_ID: '5f03292b8cc16e0b1d1e5f16'
       SENTRY_DSN: ''
-      GPU_INSTANCE_NAME: 'gpu-instance-1'
-      GPU_INSTANCE_ZONE: 'us-east1-d'
+      GPU_INSTANCE_NAME: '$GPU_INSTANCE_NAME'
+      GPU_INSTANCE_ZONE: '$GPU_INSTANCE_ZONE'
       USER: '$USER'
       #SSH_AUTH_SOCK: ${SSH_AUTH_SOCK}
       ## End Local Dev Settings ###
