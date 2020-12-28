@@ -119,11 +119,15 @@ if __name__ == '__main__':
                 subprocess.call(['mv', './tasks/result_task.txt', './tasks/result_task_submitted.txt'])
 
                 ## debug purpose, need to remove when prod ##
-                print(post_response.text)
-                TASK_QUEUE = False
+                if debug_mode:
+                    print(post_response.text)
+                    TASK_QUEUE = False
+                else:
+                    TASK_QUEUE = True
                 ######
 
             else:
+                print(post_response.text)
                 print('Task submission is failed! Please check task host is alive or correct!')
                 TASK_QUEUE = False
 
