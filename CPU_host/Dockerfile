@@ -20,4 +20,4 @@ RUN sudo apt-get update && sudo apt-get install google-cloud-sdk -y
 
 ENV FLASK_APP=/main.py
 
-CMD python /root/run-scripts/task_handler.py --debug_mode True
+# CMD python /root/run-scripts/task_handler.py --debug_mode True
