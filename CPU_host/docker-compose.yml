@@ -20,7 +20,7 @@ services:
       # map tasks folder to the container
       #- ./tasks:/app/tasks
         #- /${SSH_AUTH_SOCK}:/${SSH_AUTH_SOCK}
-      - "./.ssh:/root/.ssh:ro"
+      - "~/.ssh:/root/.ssh:ro"
       - "./run-scripts:/root/run-scripts"
         #- ./.ssh/google_compute_engine:/root/.ssh/google_compute_engine:ro
         #- ./.ssh/google_compute_engine.pub:/root/.ssh/google_compute_engine.pub:ro
