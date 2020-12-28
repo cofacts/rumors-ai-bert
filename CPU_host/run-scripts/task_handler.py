@@ -5,6 +5,7 @@ import config
 import requests
 import json
 import subprocess
+import argparse
 
 from shutil import copyfile
 
@@ -14,15 +15,36 @@ from transform_json_to_csv import Transform_JSON_to_CSV
 
 if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser()
+
+    # Required parameters
+    parser.add_argument(
+        "--debug_mode",
+        default=False,
+        type=bool,
+        required=False,
+        help="Enable debug mode",
+    )
+
+    args = parser.parse_args()
+
+    debug_mode = args.debug_mode
+
+
     TASK_QUEUE = True
 
     # start GPU machine
-    subprocess.call(['bash', './start_GPU.sh'])
+    if not debug_mode:
+        subprocess.call(['bash', './start_GPU.sh'])
 
     while TASK_QUEUE:
 
         # curl command: curl -XGET http://ai-api-stag.cofacts.org/v1/tasks?modelId=5f03292b8cc16e0b1d1e5f16
-        get_task_site = config.TASK_HOST + '/v1/tasks?modelId=' + config.MODEL_ID + '&test=1'
+        if debug_mode:
+            get_task_site = config.TASK_HOST + '/v1/tasks?modelId=' + config.MODEL_ID + '&test=1'
+        else:
+            get_task_site = config.TASK_HOST + '/v1/tasks?modelId=' + config.MODEL_ID
+
         post_task_site = config.TASK_HOST + '/v1/tasks'
 
         response = requests.get(get_task_site)
@@ -95,7 +117,7 @@ if __name__ == '__main__':
             if post_response.status_code == 200:
                 print('Task submission is successful!')
                 subprocess.call(['mv', './tasks/result_task.txt', './tasks/result_task_submitted.txt'])
-                
+
                 ## debug purpose, need to remove when prod ##
                 print(post_response.text)
                 TASK_QUEUE = False
@@ -111,5 +133,5 @@ if __name__ == '__main__':
             # print('The result task file:{} does not exist'.format(result_file))
             TASK_QUEUE = False
 
-
-    subprocess.call(['bash', './stop_GPU.sh'])
+    if not debug_mode:
+        subprocess.call(['bash', './stop_GPU.sh'])
