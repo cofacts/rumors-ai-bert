@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
 
-    # Required parameters
+    # parameters
     parser.add_argument(
         "--debug_mode",
         default=False,
@@ -39,7 +39,6 @@ if __name__ == '__main__':
 
     while TASK_QUEUE:
 
-        # curl command: curl -XGET http://ai-api-stag.cofacts.org/v1/tasks?modelId=5f03292b8cc16e0b1d1e5f16
         if debug_mode:
             get_task_site = config.TASK_HOST + '/v1/tasks?modelId=' + config.MODEL_ID + '&test=1'
         else:
@@ -73,6 +72,7 @@ if __name__ == '__main__':
                 TASK_QUEUE = False
                 break
         else:
+            print(response.text)
             print('Task retrieveing is failed, please check task host or model ID settings!')
             TASK_QUEUE = False
             break
@@ -118,13 +118,11 @@ if __name__ == '__main__':
                 print('Task submission is successful!')
                 subprocess.call(['mv', './tasks/result_task.txt', './tasks/result_task_submitted.txt'])
 
-                ## debug purpose, need to remove when prod ##
                 if debug_mode:
                     print(post_response.text)
                     TASK_QUEUE = False
                 else:
                     TASK_QUEUE = True
-                ######
 
             else:
                 print(post_response.text)
