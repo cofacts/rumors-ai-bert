@@ -6,6 +6,7 @@ python ~/rumors-ai-bert/GPU_host/model_bert/run_multi_label_classification.py \
 	--do_train \
 	--do_eval \
 	--data_dir ~/rumors-ai-bert/GPU_host/data/processed_data/ \
+	--category_num 17 \
 	--learning_rate 1e-4 \
 	--num_train_epochs 3 \
 	--max_seq_length 128 \

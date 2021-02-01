@@ -7,6 +7,7 @@ rm ~/rumors-ai-bert/GPU_host/tasks/cached*
 	--model_name_or_path models_bert \
 	--do_eval \
 	--data_dir ~/rumors-ai-bert/GPU_host/tasks/ \
+	--category_num 17 \
 	--predict_file test.csv \
 	--output_dir ~/rumors-ai-bert/GPU_host/prediction/ \
 	--per_gpu_eval_batch_size=16 \
