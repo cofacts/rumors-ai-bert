@@ -85,7 +85,12 @@ class DataTrainingArguments:
     overwrite_cache: bool = field(
         default=False, metadata={"help": "Overwrite the cached training and evaluation sets"}
     )
-
+    category_num: int = field(
+        default=17,
+        metadata={
+            "help": "The number of different categories of articles."
+        },
+    )
 
 def main():
     # See all possible arguments in src/transformers/training_args.py
@@ -126,6 +131,7 @@ def main():
 
     try:
         processor = processors[data_args.task_name]()
+        processor.set_labels(data_args.category_num)
         label_list = processor.get_labels()
         num_labels = len(label_list)
     except KeyError:
@@ -158,12 +164,14 @@ def main():
     train_dataset = (
         MultiLabelClassificationDataset(
             data_dir=data_args.data_dir,
+            category_num=data_args.category_num,
             tokenizer=tokenizer,
             task=data_args.task_name,
             max_seq_length=data_args.max_seq_length,
             overwrite_cache=data_args.overwrite_cache,
             mode=Split.train,
             local_rank=training_args.local_rank,
+
         )
         if training_args.do_train
         else None
@@ -192,6 +200,7 @@ def main():
     eval_dataset = (
         MultiLabelClassificationDataset(
             data_dir=data_args.data_dir,
+            category_num=data_args.category_num,
             tokenizer=tokenizer,
             task=data_args.task_name,
             max_seq_length=data_args.max_seq_length,
@@ -243,7 +252,7 @@ def main():
         preds = trainer.predict(eval_dataset)
 
         result = preds.metrics
-        
+
         # shape = (num_examples, num_labels)
         detailed_result = [ list(preds.predictions.argmax(axis=1)), list(preds.label_ids) ]
 

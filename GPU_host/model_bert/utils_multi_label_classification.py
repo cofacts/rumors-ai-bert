@@ -95,6 +95,7 @@ class MultiLabelClassificationDataset(Dataset):
     def __init__(
         self,
         data_dir: str,
+        category_num: int,
         tokenizer: PreTrainedTokenizer,
         task: str,
         max_seq_length: Optional[int] = None,
@@ -103,6 +104,7 @@ class MultiLabelClassificationDataset(Dataset):
         local_rank=-1,
     ):
         processor = processors[task]()
+        processor.set_labels(category_num)
 
         cached_features_file = os.path.join(
             data_dir,
@@ -148,6 +150,8 @@ class MultiLabelClassificationDataset(Dataset):
 
 class DataProcessor:
     """Base class for data converters for multi label classification data sets."""
+    def __init__(self):
+        self.labels = []
 
     def get_train_examples(self, data_dir):
         """Gets a collection of `InputExample`s for the train set."""
@@ -164,7 +168,9 @@ class DataProcessor:
     def get_labels(self):
         """Gets the list of labels for this data set."""
         raise NotImplementedError()
-
+    def set_labels(self, category_num):
+        """Sets the list of labels for this data set."""
+        raise NotImplementedError()
 
 class CofactsProcessor(DataProcessor):
     """Processor for the Cofacts data set."""
@@ -187,7 +193,12 @@ class CofactsProcessor(DataProcessor):
 
     def get_labels(self):
         """See base class."""
-        return ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"]
+        return self.labels
+
+    def set_labels(self, category_num):
+        """Sets the list of labels for this data set."""
+        # ["0", "1", ..., "category_num"]
+        self.labels = [str(i) for i in range(int(category_num))]
 
     def _read_csv(self, input_file):
         with open(input_file, "r", encoding="utf-8") as f:

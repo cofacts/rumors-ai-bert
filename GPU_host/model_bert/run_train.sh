@@ -3,6 +3,7 @@
 ### User define parameters
 model_name_or_path=bert-base-chinese
 data_dir=./data/
+category_num=17
 output_dir=models_bert/
 
 learning_rate=1e-4
@@ -19,6 +20,7 @@ python ./run_multi_label_classification.py \
 --do_train \
 --do_eval \
 --data_dir $data_dir \
+--category_num $category_num \
 --learning_rate $learning_rate \
 --num_train_epochs $num_train_epochs \
 --max_seq_length $max_seq_length \

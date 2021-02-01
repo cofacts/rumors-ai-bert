@@ -25,10 +25,18 @@ if __name__ == '__main__':
         required=False,
         help="Enable debug mode",
     )
+    parser.add_argument(
+        "--category_num",
+        default=17,
+        type=int,
+        required=False,
+        help="Category numbers",
+    )
 
     args = parser.parse_args()
 
     debug_mode = args.debug_mode
+    category_num = args.category_num
 
 
     TASK_QUEUE = True
@@ -90,11 +98,12 @@ if __name__ == '__main__':
             for task, result in zip(task_dict, results[3:]):
                 #print(task, result)
                 result_task_dict = {}
-                prediction = {'confidence': {'c1': 0, 'c2': 0, 'c3': 0, 'c4': 0,
-                                'c5': 0, 'c6': 0, 'c7': 0, 'c8': 0, 'c9': 0,
-                                'c10': 0, 'c11': 0, 'c12': 0, 'c13': 0, 'c14': 0,
-                                'c15': 0, 'c16': 0, 'c17': 0,
-                            }}
+                # prediction = {'confidence': {'c1': 0, 'c2': 0, 'c3': 0, 'c4': 0,
+                #                 'c5': 0, 'c6': 0, 'c7': 0, 'c8': 0, 'c9': 0,
+                #                 'c10': 0, 'c11': 0, 'c12': 0, 'c13': 0, 'c14': 0,
+                #                 'c15': 0, 'c16': 0, 'c17': 0,
+                #             }}
+                prediction = { 'confidence': { f'c{i+1}': 0 for i in range(len(category_num))}}
                 predict_class = str(int(result.replace('\n', '').split(' ')[-1])+1)
 
                 prediction['confidence']['c'+predict_class] = 1

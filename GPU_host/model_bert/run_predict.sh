@@ -3,6 +3,7 @@
 ### User define parameters
 model_name_or_path=models_bert
 data_dir=./data/
+category_num=17
 predict_file=dev.csv
 output_dir=./prediction/
 
@@ -14,6 +15,7 @@ python ./run_multi_label_classification.py \
 --model_name_or_path $model_name_or_path \
 --do_eval \
 --data_dir $data_dir \
+--category_num $category_num \
 --predict_file $predict_file \
 --per_gpu_eval_batch_size=$per_gpu_eval_batch_size \
 --output_dir $output_dir

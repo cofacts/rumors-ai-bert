@@ -87,6 +87,7 @@ python ./run_multi_label_classification.py \
 --do_train \
 --do_eval \
 --data_dir ../data/processed_data/ \
+--category_num 17 \
 --learning_rate 1e-4 \
 --num_train_epochs 3 \
 --max_seq_length 128 \
@@ -128,6 +129,7 @@ python ./run_multi_label_classification.py \
 --model_name_or_path models_bert \
 --do_eval \
 --data_dir ../data/processed_data/ \
+--category_num 17 \
 --predict_file test.csv \
 --per_gpu_eval_batch_size=16 \
 --output_dir ./prediction/
