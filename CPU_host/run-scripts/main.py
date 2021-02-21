@@ -1,9 +1,13 @@
 # coding:utf-8
-
 import os
+import config
 import requests
 import json
+import subprocess
 import argparse
+
+from shutil import copyfile
+from transform_json_to_csv import Transform_JSON_to_CSV
 
 DEFAULT_CATEGORY_MAPPING = {
   0: 'kj287XEBrIRcahlYvQoS', # 中國影響力
@@ -25,17 +29,17 @@ DEFAULT_CATEGORY_MAPPING = {
   16: 'oj2o7nEBrIRcahlYRAox' # 轉發協尋、捐款捐贈
 }
 
-def register_model(register_url, model_name, categoryMapping):
+def register_model(cofacts_url, model_name, categoryMapping):
     """
     Register AI model in Cofacts host
 
-    :param register_url: Cofacts model registration url
+    :param cofacts_url: Cofacts host url
     :param model_name: model name to be registered
     :param categoryMapping: category mapping dictionary
 
     :return: model ID and api key
     """
-
+    register_url = cofacts_url + '/v1/models'
     model_ID = ''
     api_key = ''
 
@@ -65,6 +69,17 @@ def register_model(register_url, model_name, categoryMapping):
     return model_ID, api_key
 
 
+def get_task(cofacts_url, model_ID, debug_mode=False):
+
+    if debug_mode:
+        get_task_url = cofacts_url + '/v1/tasks?modelId=' + model_ID + '&test=1'
+    else:
+        get_task_url = cofacts_url + '/v1/tasks?modelId=' + model_ID
+
+    return requests.get(get_task_url)
+
+
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -84,6 +99,7 @@ if __name__ == '__main__':
         required=True,
         help="Performing action: register or start(default)",
     )
+    ## model register parameters
     parser.add_argument(
         "--model_name",
         default="",
@@ -91,6 +107,7 @@ if __name__ == '__main__':
         required=False,
         help="Model name to be registered",
     )
+    ## task start parameters
     parser.add_argument(
         "--model_ID",
         default="",
@@ -105,6 +122,20 @@ if __name__ == '__main__':
         required=False,
         help="API key to access Cofacts API",
     )
+    parser.add_argument(
+        "--debug_mode",
+        default=False,
+        type=bool,
+        required=False,
+        help="Enable debug mode",
+    )
+    parser.add_argument(
+        "--category_num",
+        default=17,
+        type=int,
+        required=False,
+        help="Category numbers",
+    )
 
 
     args = parser.parse_args()
@@ -114,18 +145,118 @@ if __name__ == '__main__':
     model_name = args.model_name
     model_ID = args.model_ID
     api_key = args.api_key
+    debug_mode = args.debug_mode
+    category_num = args.category_num
 
     if action == 'register':
         if model_name == "":
             print("MODEL_NAME is not given! Automatically set MODEL_NAME=test_model to continue registering process.")
             model_name = 'test_model'
 
-        register_url = cofacts_url + '/v1/models'
+
         categoryMapping = DEFAULT_CATEGORY_MAPPING
 
-        model_ID, api_key = register_model(register_url, model_name, categoryMapping)
+        model_ID, api_key = register_model(cofacts_url, model_name, categoryMapping)
 
     elif action == 'start':
-        pass
+
+        TASK_QUEUE = True
+
+        # gcloud auth
+        subprocess.call(['bash', './service_account.sh'])
+
+        # start GPU machine
+        if not debug_mode:
+            subprocess.call(['bash', './start_GPU.sh'])
+
+        while TASK_QUEUE:
+
+            # get task and send to GPU host to do article classification
+            response = get_task(cofacts_url, model_ID, debug_mode)
+
+            if response.status_code == 200:
+                print('Task retrieving is successful!')
+
+                task_dict = {}
+
+                with open('task.json', 'w') as jsonfile:
+                    task_dict = response.json()
+                    json.dump(task_dict, jsonfile, ensure_ascii=False, indent=4)
+
+
+                # check the task needs to continue or not (status code or folder contains indicator file)
+                if len(task_dict) > 0:
+                    print('Task is not empty, sending to GPU host...')
+                    Transform_JSON_to_CSV('task.json', 'task.csv')
+                    subprocess.call(['mv', './task.csv', './tasks/task.csv'])
+
+                    subprocess.call(['bash', './send_task.sh'])
+                    subprocess.call(['mv', './tasks/task.csv', './tasks/task_sended.csv'])
+                    TASK_QUEUE = True
+                else:
+                    print('Empty task!')
+                    TASK_QUEUE = False
+                    break
+            else:
+                print(response.text)
+                print('Task retrieveing is failed, please check Cofacts host or model ID settings!')
+                TASK_QUEUE = False
+                break
+
+
+            # parse prediction results from GPU host and send to Cofacts host
+            try:
+                # Read prediction result file: result_task.txt
+                result_file = './tasks/result_task.txt'
+
+                with open(result_file, 'r') as file:
+                    results = file.readlines()
+
+
+                result_task_payload = []
+                for task, result in zip(task_dict, results[3:]):
+
+                    result_task_dict = {}
+                    prediction = { 'confidence': { f'c{i+1}': 0 for i in range(category_num)}}
+                    predict_class = str(int(result.replace('\n', '').split(' ')[-1])+1)
+
+                    prediction['confidence']['c'+predict_class] = 1
+
+                    result_task_dict['id'] = task['id']
+                    result_task_dict['result'] = {'prediction': prediction, 'time': 5566}
+
+                    result_task_payload.append(result_task_dict)
+
+                post_task_site = cofacts_url + '/v1/tasks'
+
+                headers = {'Content-Type': 'application/json', 'Accept':'application/json'}
+                post_response = requests.post(post_task_site, json=result_task_payload, headers=headers)
+
+                print('='*20)
+                print(post_response.text)
+                print('='*20)
+
+                if post_response.status_code == 200:
+                    print('Task submission is successful!')
+                    subprocess.call(['mv', './tasks/result_task.txt', './tasks/result_task_submitted.txt'])
+
+                else:
+                    print(f'Task submission is failed! Please check task host is alive or correct! Error code = {post_response.status_code}')
+                    TASK_QUEUE = False
+
+
+                if debug_mode:
+                    with open('debug.json', 'w') as jsonfile:
+                        json.dump(result_task_payload, jsonfile, ensure_ascii=False, indent=4)
+
+            except OSError:
+                print(OSError.message)
+                # print('The result task file:{} does not exist'.format(result_file))
+                TASK_QUEUE = False
+
+        # stop GPU machine
+        if not debug_mode:
+            subprocess.call(['bash', './stop_GPU.sh'])
+
     else:
         print('No such action! We only support register or start action.')
