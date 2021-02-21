@@ -18,4 +18,5 @@ services:
     volumes:
       # map tasks folder to the container
       - "~/.ssh:/root/.ssh:ro"
+      # - "~/.ssh:~/.ssh:ro"
       - "./run-scripts:/root/run-scripts"
