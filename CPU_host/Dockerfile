@@ -33,7 +33,7 @@ RUN sudo apt-get update && sudo apt-get install google-cloud-sdk -y
 
 # Set all environment variables
 ## for CPU host performing register/start action
-ENV CFA_URL="https://ai-api-stag.cofacts.org/"
+ENV CFA_URL="https://ai-api-stag.cofacts.org"
 ENV CFA_ACTION=""
 ENV CFA_API_KEY=""
 ENV MODEL_NAME="test_modelll"
@@ -51,8 +51,8 @@ ENV TASK_HOST="https://ai-api-stag.cofacts.org"
 ENV MODEL_ID="5f03292b8cc16e0b1d1e5f16"
 #ENV MODEL_ID=""
 
-ENV GPU_INSTANCE_NAME="gpu-instance-1"
-ENV GPU_INSTANCE_ZONE="us-east1-d"
+ENV GPU_INSTANCE_NAME="gpu-instance-2"
+ENV GPU_INSTANCE_ZONE="asia-east1-a"
 ENV USER="gary96302000_eecs96"
 
 # Execute main program

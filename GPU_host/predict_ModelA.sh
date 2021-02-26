@@ -4,7 +4,7 @@ rm ~/rumors-ai-bert/GPU_host/tasks/cached*
 
 /opt/conda/bin/python ~/rumors-ai-bert/GPU_host/model_bert/run_multi_label_classification.py \
 	--task_name cofacts \
-	--model_name_or_path models_bert \
+	--model_name_or_path model_bert \
 	--do_eval \
 	--data_dir ~/rumors-ai-bert/GPU_host/tasks/ \
 	--category_num 17 \

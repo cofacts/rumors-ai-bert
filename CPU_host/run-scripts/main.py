@@ -163,10 +163,15 @@ if __name__ == '__main__':
         TASK_QUEUE = True
 
         # gcloud auth
+        print(f'gcloud authorizing...')
+        print(f'SERVICE_ACCOUNT = {config.SERVICE_ACCOUNT}')
         subprocess.call(['bash', './service_account.sh'])
 
         # start GPU machine
         if not debug_mode:
+            print(f'Starting GPU machine...')
+            print(f'GPU_INSTANCE_NAME = {config.GPU_INSTANCE_NAME}')
+            print(f'GPU_INSTANCE_ZONE = {config.GPU_INSTANCE_ZONE}')
             subprocess.call(['bash', './start_GPU.sh'])
 
         while TASK_QUEUE:
@@ -209,9 +214,11 @@ if __name__ == '__main__':
                 # Read prediction result file: result_task.txt
                 result_file = './tasks/result_task.txt'
 
+                print(f'Parsing prediction result file: {result_file}')
                 with open(result_file, 'r') as file:
                     results = file.readlines()
 
+                print(f'There are {len(results[3:])} articles being classified by Cofacts AI-BERT')
 
                 result_task_payload = []
                 for task, result in zip(task_dict, results[3:]):
@@ -230,6 +237,8 @@ if __name__ == '__main__':
                 post_task_site = cofacts_url + '/v1/tasks'
 
                 headers = {'Content-Type': 'application/json', 'Accept':'application/json'}
+
+                print(f'Sending prediction result to Cofacts AI master host...')
                 post_response = requests.post(post_task_site, json=result_task_payload, headers=headers)
 
                 print('='*20)
@@ -248,6 +257,7 @@ if __name__ == '__main__':
                 if debug_mode:
                     with open('debug.json', 'w') as jsonfile:
                         json.dump(result_task_payload, jsonfile, ensure_ascii=False, indent=4)
+                    TASK_QUEUE = False
 
             except OSError:
                 print(OSError.message)
@@ -256,6 +266,9 @@ if __name__ == '__main__':
 
         # stop GPU machine
         if not debug_mode:
+            print(f'Stopping GPU machine...')
+            print(f'GPU_INSTANCE_NAME = {config.GPU_INSTANCE_NAME}')
+            print(f'GPU_INSTANCE_ZONE = {config.GPU_INSTANCE_ZONE}')
             subprocess.call(['bash', './stop_GPU.sh'])
 
     else:

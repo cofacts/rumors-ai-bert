@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ### User define parameters
-model_name_or_path=models_bert
+model_name_or_path=model_bert
 data_dir=./data/
 category_num=17
 predict_file=dev.csv

@@ -4,7 +4,7 @@
 model_name_or_path=bert-base-chinese
 data_dir=./data/
 category_num=17
-output_dir=models_bert/
+output_dir=model_bert/
 
 learning_rate=1e-4
 num_train_epochs=1
