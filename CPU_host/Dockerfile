@@ -13,6 +13,9 @@ COPY ./cofacts-dev-cd6d8e1c4016.json /root/cofacts-dev-key.json
 # Copy ssh files
 COPY .ssh /root/.ssh
 
+# Set permission
+RUN chmod 600 /root/.ssh/google_compute_engine
+
 # Copy scripts
 COPY ./run-scripts /root/run-scripts
 
