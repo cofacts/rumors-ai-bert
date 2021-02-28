@@ -23,12 +23,36 @@ The CPU host repo is mainly for user to build a service to:
 
 ```bash
 cd CPU_host
-docker-compose up --build
+docker build ./ -t IMAGE_NAME:IMAGE_VERSION
 ```
 
 ### Image on Dockerhub
 
 https://hub.docker.com/r/gary9630/rumors-ai-bert/tags
+
+
+### Run model registration
+
+```bash
+docker run --rm --env CFA_ACTION=register [--env MODEL_NAME=YOUR_NAME] -t IMAGE_NAME:IMAGE_VERSION
+```
+
+After successfully registering, you will receive your MODEL_ID and CFA_API_KEY.
+
+Please store these information carefully. You will need these information to send prediction results.
+
+### Run articles classification
+
+```bash
+docker run --rm --env CFA_ACTION=start --env CFA_API_KEY=YOUR_API_KEY \
+--env MODEL_ID=YOUR_MODEL_ID --env SERVICE_ACCOUNT=YOUR_SERVICE_ACCOUNT --env KEY_FILE=KEY_FILE_PATH \
+--env GPU_INSTANCE_NAME=YOUR_GPU_INSTANCE_NAME --env GPU_INSTANCE_ZONE=YOUR_GPU_INSTANCE_ZONE --env USER=YOUR_GPU_USER_ACCOUNT \
+ -v $(pwd)/YOUR_SERVICE_ACCOUNT_KEY.json:$KEY_FILE -t IMAGE_NAME:IMAGE_VERSION
+```
+
+These environment variables can also be set in Dockerfile before building image.
+
+This command will start retrieving tasks from Cofacts AI master host, send to GPU host making predictions, and finally send results back to Cofacts AI master host.
 
 
 ## GPU host

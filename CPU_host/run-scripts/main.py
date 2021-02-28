@@ -136,7 +136,14 @@ if __name__ == '__main__':
         required=False,
         help="Category numbers",
     )
-
+    ## chunk size of prediction results sending back to Cofacts AI master
+    parser.add_argument(
+        "--chunk_size",
+        default=50,
+        type=int,
+        required=False,
+        help="Chunk size of prediction results",
+    )
 
     args = parser.parse_args()
 
@@ -147,6 +154,7 @@ if __name__ == '__main__':
     api_key = args.api_key
     debug_mode = args.debug_mode
     category_num = args.category_num
+    chunk_size = args.chunk_size
 
     if action == 'register':
         if model_name == "":
@@ -168,11 +176,10 @@ if __name__ == '__main__':
         subprocess.call(['bash', './service_account.sh'])
 
         # start GPU machine
-        if not debug_mode:
-            print(f'Starting GPU machine...')
-            print(f'GPU_INSTANCE_NAME = {config.GPU_INSTANCE_NAME}')
-            print(f'GPU_INSTANCE_ZONE = {config.GPU_INSTANCE_ZONE}')
-            subprocess.call(['bash', './start_GPU.sh'])
+        print(f'Starting GPU machine...')
+        print(f'GPU_INSTANCE_NAME = {config.GPU_INSTANCE_NAME}')
+        print(f'GPU_INSTANCE_ZONE = {config.GPU_INSTANCE_ZONE}')
+        subprocess.call(['bash', './start_GPU.sh'])
 
         while TASK_QUEUE:
 
@@ -238,20 +245,41 @@ if __name__ == '__main__':
 
                 headers = {'Content-Type': 'application/json', 'Accept':'application/json'}
 
-                print(f'Sending prediction result to Cofacts AI master host...')
-                post_response = requests.post(post_task_site, json=result_task_payload, headers=headers)
+                print(f'Sending prediction results to Cofacts AI master host...')
 
-                print('='*20)
-                print(post_response.text)
-                print('='*20)
+                # Batched posting prediction results to Cofacts AI master to avoid server timeout
+                article_num = len(result_task_payload)
+                task_num = len(range(0, article_num, chunk_size))
+                isTaskPosted = True
 
-                if post_response.status_code == 200:
-                    print('Task submission is successful!')
+                print(f'Chunk size = {chunk_size}')
+                print(f'Total articles = {article_num}')
+                print(f'{task_num} post requests will be sended to Cofacts AI master host.')
+
+                for i, article_index in enumerate(range(0, article_num, chunk_size)):
+
+                    print(f'Sending post request {i+1}/{task_num}...')
+                    print(f'Article range = {article_index} to {min(article_index+chunk_size, article_num)}')
+
+                    post_response = requests.post(post_task_site, json=result_task_payload[article_index:min(article_index+chunk_size, article_num)], headers=headers)
+
+                    print('='*20)
+                    print(post_response.text)
+                    print('='*20)
+
+                    if post_response.status_code == 200:
+                        print(f'Task #{i+1} submission is successful!')
+                        # subprocess.call(['mv', './tasks/result_task.txt', './tasks/result_task_submitted.txt'])
+
+                    else:
+                        print(f'Task #{i+1} submission is failed! Please check task host is alive or correct! Error code = {post_response.status_code}')
+                        TASK_QUEUE = False
+                        isTaskPosted = False
+
+                    print('')
+
+                if isTaskPosted:
                     subprocess.call(['mv', './tasks/result_task.txt', './tasks/result_task_submitted.txt'])
-
-                else:
-                    print(f'Task submission is failed! Please check task host is alive or correct! Error code = {post_response.status_code}')
-                    TASK_QUEUE = False
 
 
                 if debug_mode:
@@ -261,7 +289,6 @@ if __name__ == '__main__':
 
             except OSError:
                 print(OSError.message)
-                # print('The result task file:{} does not exist'.format(result_file))
                 TASK_QUEUE = False
 
         # stop GPU machine
